@@ -43,3 +43,6 @@ local_settings.py
 # User-specific files
 *.iml
 *.DS_Store
+
+# vs-code temp files
+tempCodeRunnerFile.py
