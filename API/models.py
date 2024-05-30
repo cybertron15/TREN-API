@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 import uuid
 
 # Create your models here.
@@ -14,10 +15,26 @@ class Performace(models.IntegerChoices):
         GOOD = 4,'good'
         EXCELLENT = 5,'excellent'
 
+# custom user model for storing user auth and other data
+class CustomUser(AbstractUser):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    phone_number = models.CharField(max_length=10, unique=True, null=True, blank=True)
+    bio = models.CharField(max_length=20, blank=True)
+    profilepic = models.URLField(blank=True)
+    settings = models.JSONField(blank=True, default=dict)
+
+    # this is the field which will be used when loggin in
+    USERNAME_FIELD = "email"
+    # required field when creating superuser, email and password is required by default
+    REQUIRED_FIELDS = ['first_name','last_name','username',]
+
 class Categories(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
-    owner = models.ForeignKey('auth.User' ,related_name='category', on_delete=models.CASCADE)
+    owner = models.ForeignKey('API.CustomUser' ,related_name='category', on_delete=models.CASCADE)
     created_on = models.DateTimeField(auto_now_add=True)
     is_default = models.BooleanField(default=False)
 
@@ -27,7 +44,7 @@ class Categories(models.Model):
 class Goals(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
-    owner = models.ForeignKey('auth.User' ,related_name='goals', on_delete=models.CASCADE)
+    owner = models.ForeignKey('API.CustomUser' ,related_name='goals', on_delete=models.CASCADE)
     deadline = models.DateTimeField()
     category = models.ForeignKey('API.Categories' ,related_name='goals', on_delete=models.CASCADE)
     worked_for = models.DurationField()
@@ -39,7 +56,7 @@ class Goals(models.Model):
 
 class Tasks(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    owner = models.ForeignKey('auth.User' ,related_name='tasks', on_delete=models.CASCADE)
+    owner = models.ForeignKey('API.CustomUser' ,related_name='tasks', on_delete=models.CASCADE)
     related_goal = models.ForeignKey('API.Goals' ,related_name='tasks', on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     category = models.ForeignKey('API.Categories' ,related_name='tasks', on_delete=models.CASCADE)
@@ -50,7 +67,7 @@ class Tasks(models.Model):
     duration = models.DurationField()
     completion = models.FloatField()
     priority = models.IntegerField(choices=Priority, default=3)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, related_name='subtasks') # foreign key for the same model as some taks may have subtasks
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, default=None, related_name='subtasks') # foreign key for the same model as some taks may have subtasks
 
     def __str__(self):
         return self.name
@@ -69,7 +86,7 @@ class TaskPerformace(models.Model):
 
 class Journal(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    owner = models.ForeignKey('auth.User' ,related_name='journal', on_delete=models.CASCADE)
+    owner = models.ForeignKey('API.CustomUser' ,related_name='journal', on_delete=models.CASCADE)
     performance = models.IntegerField(choices=Performace, default=1)
     created_on = models.DateTimeField(auto_now_add=True)
     summary = models.TextField(max_length=200, blank=True)
