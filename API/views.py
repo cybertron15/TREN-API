@@ -12,7 +12,11 @@ from .serializers import (
     UserSerializer
 )
 from .models import Tasks, Goals, Categories
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+# getting custom user model
+User = get_user_model()
+
 
 class UserCreate(generics.CreateAPIView):
     queryset = User.objects.all()
