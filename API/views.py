@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 # from .models import Blogpost
 from rest_framework.views import APIView
@@ -29,7 +30,8 @@ class CategoryListCreate(generics.ListCreateAPIView):
 class TaskListCreate(generics.ListCreateAPIView):
     serializer_class = TaskSerializers
     # queryset = Tasks.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     def perform_create(self, serializer):
         user = self.request.user
         serializer.save(owner=user)
