@@ -1,12 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
-
+from datetime import timedelta
+# TODO : Please set an automation script to load the category model with 3 default categories when the project is first started
 # Create your models here.
 class Priority(models.IntegerChoices):
     HIGH = 1,'High'
     MID = 2,'Midium'
     LOW = 3,'Low'
+
+class TaskType(models.IntegerChoices):
+    ONETIME = 1,'onetime'
+    REGULAR = 2,'regular'
 
 class Performace(models.IntegerChoices):
         UNACCEPTABLE = 1,'unacceptable'
@@ -34,7 +39,7 @@ class CustomUser(AbstractUser):
 class Categories(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
-    owner = models.ForeignKey('API.CustomUser' ,related_name='category', on_delete=models.CASCADE)
+    owner = models.ForeignKey('API.CustomUser' ,related_name='category', on_delete=models.CASCADE, blank=True, null=True)
     created_on = models.DateTimeField(auto_now_add=True)
     is_default = models.BooleanField(default=False)
 
@@ -47,8 +52,8 @@ class Goals(models.Model):
     owner = models.ForeignKey('API.CustomUser' ,related_name='goals', on_delete=models.CASCADE)
     deadline = models.DateTimeField()
     category = models.ForeignKey('API.Categories' ,related_name='goals', on_delete=models.CASCADE)
-    worked_for = models.DurationField()
-    completion =models.FloatField()
+    worked_for = models.DurationField(default=timedelta())
+    completion =models.FloatField(default=0)
     priority = models.IntegerField(choices=Priority.choices, default=3)
 
     def __str__(self):
@@ -57,17 +62,17 @@ class Goals(models.Model):
 class Tasks(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey('API.CustomUser' ,related_name='tasks', on_delete=models.CASCADE)
-    related_goal = models.ForeignKey('API.Goals' ,related_name='tasks', on_delete=models.CASCADE)
+    related_goal = models.ForeignKey('API.Goals' ,related_name='tasks', on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=50)
     category = models.ForeignKey('API.Categories' ,related_name='tasks', on_delete=models.CASCADE)
-    task_type = models.CharField(max_length=20) # long or short like drink glass of water
+    task_type = models.IntegerField(choices=TaskType.choices, default=2) # long or short like drink glass of water
     start_time = models.DateTimeField()
-    did_start_on_time = models.BooleanField()
-    actual_start_time = models.DateTimeField()
-    duration = models.DurationField()
-    completion = models.FloatField()
+    did_start_on_time = models.BooleanField(blank=True)
+    actual_start_time = models.DateTimeField(blank=True, null=True)
+    duration = models.DurationField(default=timedelta())
+    completion = models.FloatField(default=0)
     priority = models.IntegerField(choices=Priority, default=3)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, default=None, related_name='subtasks') # foreign key for the same model as some taks may have subtasks
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, default=None, related_name='subtasks',blank=True, null=True) # foreign key for the same model as some taks may have subtasks
 
     def __str__(self):
         return self.name
