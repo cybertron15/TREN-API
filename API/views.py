@@ -28,12 +28,15 @@ class CategoryListCreate(generics.ListCreateAPIView):
 
 class TaskListCreate(generics.ListCreateAPIView):
     serializer_class = TaskSerializers
-    queryset = Tasks.objects.all()
+    # queryset = Tasks.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     def perform_create(self, serializer):
         user = self.request.user
-        print(user.__repr__)
         serializer.save(owner=user)
+    
+    def get_queryset(self):
+        user = self.request.user
+        return Tasks.objects.filter(owner=user)
 
 
 class TaskRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
@@ -44,8 +47,15 @@ class TaskRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
 class GolasListCreate(generics.ListCreateAPIView):
     serializer_class = GoalSerializers
     queryset = Goals.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
 
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.save(owner=user)
+    
+    def get_queryset(self):
+        user = self.request.user
+        return Goals.objects.filter(owner=user)
 
 class GoalsRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GoalSerializers

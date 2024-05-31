@@ -3,9 +3,19 @@ from .models import Tasks,Goals, Categories
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.hashers import make_password
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+# customized field 
+class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def get_queryset(self):
+        request = self.context.get('request', None)
+        queryset = super().get_queryset()
+        if not request or not queryset:
+            return None
+        return queryset.filter(owner=request.user)
+
+class UserSerializer(serializers.Serializer):
     # since user has reverse relation to these fields it wont be added to the User Serializer by default so we add it 
     # goals = serializers.PrimaryKeyRelatedField(many=True, queryset=Tasks.objects.all())
     # tasks = serializers.PrimaryKeyRelatedField(many=True, queryset=Tasks.objects.all())
@@ -38,6 +48,12 @@ class UserSerializer(serializers.ModelSerializer):
         data.pop('re_password')
 
         return data
+    
+    def create(self, validated_data):
+        # Hash the password before saving the user
+        validated_data['password'] = make_password(validated_data['password'])
+
+        return super().create(validated_data)
 
 class CategorySerializers(serializers.ModelSerializer):
     # we are making the owner field readonly so no one can modify it via serializer data directly.
@@ -67,7 +83,9 @@ class GoalSerializers(serializers.ModelSerializer):
 
 class TaskSerializers(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
-    related_goal = serializers.SlugRelatedField(slug_field='name', queryset=Goals.objects.all())
+    # using the custom primary key realated fields difned above so the user can only see the goals which belongs to them
+    related_goal = UserFilteredPrimaryKeyRelatedField(queryset=Goals.objects.all(), required=False, allow_null=True)
+    parent = UserFilteredPrimaryKeyRelatedField(queryset=Tasks.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Tasks
@@ -80,8 +98,22 @@ class TaskSerializers(serializers.ModelSerializer):
             "task_type",
             "start_time",
             "did_start_on_time",
+            "actual_start_time",
             "duration",
             "completion",
-            "parent",
-            "priority"
+            "priority",
+            "parent"
         ]
+
+    # validating related_goals fields making sure used can only create tasks related to their own goals
+    def validate_related_goal(self, value):
+        request = self.context.get('request')
+        if value and value.owner != request.user:
+            raise serializers.ValidationError("You can only relate tasks to your own goals.")
+        return value
+    
+    def validate_parent(self, value):
+        request = self.context.get('request')
+        if value and value.owner != request.user:
+            raise serializers.ValidationError("You can only create subtasks for your own tasks.")
+        return value
