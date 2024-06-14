@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
 User = get_user_model()
-
 # customized field 
 class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
     def get_queryset(self):
@@ -15,7 +14,7 @@ class UserFilteredPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
             return None
         return queryset.filter(owner=request.user)
 
-class UserSerializer(serializers.Serializer):
+class UserSerializer(serializers.ModelSerializer):
     # since user has reverse relation to these fields it wont be added to the User Serializer by default so we add it 
     # goals = serializers.PrimaryKeyRelatedField(many=True, queryset=Tasks.objects.all())
     # tasks = serializers.PrimaryKeyRelatedField(many=True, queryset=Tasks.objects.all())
@@ -25,6 +24,7 @@ class UserSerializer(serializers.Serializer):
     # goals = serializers.SlugRelatedField(many=True, queryset=Tasks.objects.all(), slug_field='name')
     # tasks = serializers.SlugRelatedField(many=True, queryset=Tasks.objects.all(), slug_field='name')
     re_password = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True)
     class Meta:
         model = User
         fields = [
