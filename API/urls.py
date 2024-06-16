@@ -2,6 +2,7 @@ from django.urls import path, include
 from . import views  
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 urlpatterns = [
+    path('', include('rest_framework.urls')), # enables sessions auth for browsable API
     path("category/",views.CategoryListCreate.as_view(), name='category-list-create'),
     path("tasks/",views.TaskListCreate.as_view(), name='task-list-create'),
     path("tasks/<str:pk>",views.TaskRetrieveUpdateDestroy.as_view(), name='task-retirve-update-destroy'),

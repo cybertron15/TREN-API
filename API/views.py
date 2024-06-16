@@ -3,6 +3,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import SessionAuthentication
 
 # from .models import Blogpost
 from rest_framework.views import APIView
@@ -24,6 +25,7 @@ class UserCreate(generics.CreateAPIView):
     serializer_class = UserSerializer
 
 class CategoryListCreate(generics.ListCreateAPIView):
+    authentication_classes = [JWTAuthentication,SessionAuthentication]
     serializer_class = CategorySerializers
     queryset = Categories.objects.all()
 
@@ -31,7 +33,7 @@ class TaskListCreate(generics.ListCreateAPIView):
     serializer_class = TaskSerializers
     # queryset = Tasks.objects.all()
     permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [JWTAuthentication,SessionAuthentication]
     def perform_create(self, serializer):
         user = self.request.user
         serializer.save(owner=user)
@@ -44,12 +46,13 @@ class TaskListCreate(generics.ListCreateAPIView):
 class TaskRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializers
     queryset = Tasks.objects.all()
+    authentication_classes = [JWTAuthentication,SessionAuthentication]
 
 
 class GolasListCreate(generics.ListCreateAPIView):
     serializer_class = GoalSerializers
     queryset = Goals.objects.all()
-    # permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication,SessionAuthentication]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -62,3 +65,5 @@ class GolasListCreate(generics.ListCreateAPIView):
 class GoalsRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GoalSerializers
     queryset = Goals.objects.all()
+    authentication_classes = [JWTAuthentication,SessionAuthentication]
+

@@ -27,7 +27,7 @@ SECRET_KEY = ENV_VARS['DJ_SECRET']
 DEBUG = True if ENV_VARS['MODE'] == 'dev' else False
 
 ALLOWED_HOSTS = []
-
+LOGIN_REDIRECT_URL = '/tasks/'
 
 # Application definition
 
@@ -139,6 +139,7 @@ REST_FRAMEWORK = {
     # ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ),
 }
 
